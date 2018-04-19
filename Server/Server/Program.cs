@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using Newtonsoft.Json;
+using System.IO;
 
 namespace Server
 {
@@ -27,7 +28,7 @@ namespace Server
         static Queue<Requisicao> filaLog = new Queue<Requisicao>();
 
         /// <summary>Mapa</summary>
-        static Dictionary<long, String> Comand = new Dictionary<long, string>();
+        static Dictionary<long, String> Mapa = new Dictionary<long, string>();
 
         /// <summary>
         /// Thread principal do servidor, cria as outras threads e é responsável por receber os comandos e os escrever em filaComandos.
@@ -85,12 +86,12 @@ namespace Server
                     if (filaComandos.Count > 0)
                     {
                         req = filaComandos.Dequeue();
-                        lock (filaProcessa)
+                        lock (blockProcessa)
                         {
                             filaProcessa.Enqueue(req);
                         }
 
-                        lock (filaLog)
+                        lock (blockLog)
                         {
                             filaLog.Enqueue(req);
                         }
@@ -105,7 +106,21 @@ namespace Server
         /// </summary>
         static void ThreadLogaDisco()
         {
-
+            Requisicao req;
+            while (true)
+            {
+                lock (blockLog)
+                {
+                    using (StreamWriter file = new StreamWriter("arquivo.txt"))
+                    {
+                        while (filaLog.Count > 0)
+                        {
+                            req = filaLog.Dequeue();
+                            file.WriteLine(String.Format("[{0} {1}]", req.Comand.Chave, req.Comand.Valor));
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -127,28 +142,61 @@ namespace Server
                     if (filaProcessa.Count > 0)
                     {
                         req = filaProcessa.Dequeue();
-
+                        byte[] resposta;
                         switch (req.Comand.comand)
                         {
                             case (int)Comandos.ADD:
-                                Comand.Add(req.Comand.Chave, req.Comand.Valor);
+                                if (Mapa.ContainsKey(req.Comand.Chave))
+                                {
+                                    resposta = Encoding.ASCII.GetBytes("Não foi possível inserir o item, chave já existente.");
+                                }
+                                else
+                                {
+                                    resposta = Encoding.ASCII.GetBytes("Inserido com sucesso.");
+                                    Mapa.Add(req.Comand.Chave, req.Comand.Valor);
+                                }
+                                socket.SendTo(resposta, resposta.Length, SocketFlags.None, req.Remote);
                                 break;
 
                             case (int)Comandos.UPDATE:
-                                if (Comand.ContainsKey(req.Comand.Chave))
-                                    Comand[req.Comand.Chave] = req.Comand.Valor;
+
+                                if (Mapa.ContainsKey(req.Comand.Chave))
+                                {
+                                    resposta = Encoding.ASCII.GetBytes("Atualizacao efetuada com sucesso.");
+                                    Mapa[req.Comand.Chave] = req.Comand.Valor;
+                                }
+                                else
+                                {
+                                    resposta = Encoding.ASCII.GetBytes("Não foi possível atualizar, elemento inexistente.");
+                                }
+                                socket.SendTo(resposta, resposta.Length, SocketFlags.None, req.Remote);
                                 break;
 
                             case (int)Comandos.READ:
                                 string data;
                                 
-                                if (!Comand.TryGetValue(req.Comand.Chave, out data))
-                                    continue;
-                                byte[] dados = Encoding.ASCII.GetBytes(data);
-                                socket.SendTo(dados, dados.Length, SocketFlags.None, req.Remote);
+                                if (!Mapa.TryGetValue(req.Comand.Chave, out data))
+                                {
+                                    resposta = Encoding.ASCII.GetBytes("Chave nao encontrada, elemento inexistente.");
+                                }
+                                else
+                                {
+                                    resposta = Encoding.ASCII.GetBytes(data);
+                                }
+                                socket.SendTo(resposta, resposta.Length, SocketFlags.None, req.Remote);
                                 break;
 
                             case (int)Comandos.DELETE:
+                                if (Mapa.ContainsKey(req.Comand.Chave))
+                                {
+                                    Mapa.Remove(req.Comand.Chave);
+                                    resposta = Encoding.ASCII.GetBytes("Remocao efetuada com sucesso.");
+                                }
+                                else
+                                {
+                                    resposta = Encoding.ASCII.GetBytes("Não foi possível remover, elemento inexistente.");
+                                }
+                                socket.SendTo(resposta, resposta.Length, SocketFlags.None, req.Remote);
                                 break;
                         }
                     }
