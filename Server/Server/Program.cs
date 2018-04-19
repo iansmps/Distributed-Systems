@@ -19,7 +19,6 @@ namespace Server
         /// <summary>Objeto para controlar o bloqueio da filaLog </summary>
         static readonly object blockLog = new object();
         
-        
         /// <summary>Fila de comandos recebidos</summary>
         static Queue<Requisicao> filaComandos = new Queue<Requisicao>();
         /// <summary>Fila de comandos para serem processados</summary>
@@ -48,13 +47,16 @@ namespace Server
             IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
             EndPoint Remote = (EndPoint)(sender);
 
+            RecuperaMapa();
 
             //Threads
             Task threadComandos = new Task(ThreadComandos);
             Task threadProcessaComando = new Task(ThreadProcessaComando);
+            Task threadLogaDisco = new Task(ThreadLogaDisco);
 
             threadComandos.Start();
             threadProcessaComando.Start();
+            threadLogaDisco.Start();
             
             while (true)
             {
@@ -69,7 +71,82 @@ namespace Server
                 {
                     filaComandos.Enqueue(req);
                 }
-                //socket.SendTo(data, receivedDataLength, SocketFlags.None, Remote);
+            }
+        }
+
+        static public void RecuperaMapa()
+        {
+            Comando comando;
+            string resposta = "";
+            if (!File.Exists("json.txt"))
+            {
+                var stream = File.Create("json.txt");
+                stream.Close();
+            }
+            using (StreamReader file = new StreamReader("json.txt"))
+            {
+                while(!file.EndOfStream)
+                {
+                    comando = JsonConvert.DeserializeObject<Comando>(file.ReadLine());
+                    ProcessaComando(comando, ref resposta);
+                }
+                file.Close();
+            }
+        }
+
+        static public void ProcessaComando(Comando comando, ref string resposta)
+        {
+            switch (comando.comand)
+            {
+                case (int)Comandos.ADD:
+                    if (Mapa.ContainsKey(comando.Chave))
+                    {
+                        resposta = "Não foi possível inserir o item, chave já existente.";
+                    }
+                    else
+                    {
+                        resposta = "Inserido com sucesso.";
+                        Mapa.Add(comando.Chave, comando.Valor);
+                    }
+                    break;
+
+                case (int)Comandos.UPDATE:
+
+                    if (Mapa.ContainsKey(comando.Chave))
+                    {
+                        resposta = "Atualizacao efetuada com sucesso.";
+                        Mapa[comando.Chave] = comando.Valor;
+                    }
+                    else
+                    {
+                        resposta = "Não foi possível atualizar, elemento inexistente.";
+                    }
+                    break;
+
+                case (int)Comandos.READ:
+                    string data;
+
+                    if (!Mapa.TryGetValue(comando.Chave, out data))
+                    {
+                        resposta = "Chave nao encontrada, elemento inexistente.";
+                    }
+                    else
+                    {
+                        resposta = data;
+                    }
+                    break;
+
+                case (int)Comandos.DELETE:
+                    if (Mapa.ContainsKey(comando.Chave))
+                    {
+                        Mapa.Remove(comando.Chave);
+                        resposta = "Remocao efetuada com sucesso.";
+                    }
+                    else
+                    {
+                        resposta = "Não foi possível remover, elemento inexistente.";
+                    }
+                    break;
             }
         }
 
@@ -111,13 +188,17 @@ namespace Server
             {
                 lock (blockLog)
                 {
-                    using (StreamWriter file = new StreamWriter("arquivo.txt"))
+                    using (StreamWriter file = new StreamWriter("json.txt", true))
                     {
                         while (filaLog.Count > 0)
                         {
                             req = filaLog.Dequeue();
-                            file.WriteLine(String.Format("[{0} {1}]", req.Comand.Chave, req.Comand.Valor));
+                            if (req.Comand.comand == (int)Comandos.READ)
+                                continue;
+                            string comando = JsonConvert.SerializeObject(req.Comand);
+                            file.WriteLine(comando);
                         }
+                        file.Close();
                     }
                 }
             }
@@ -142,63 +223,11 @@ namespace Server
                     if (filaProcessa.Count > 0)
                     {
                         req = filaProcessa.Dequeue();
-                        byte[] resposta;
-                        switch (req.Comand.comand)
-                        {
-                            case (int)Comandos.ADD:
-                                if (Mapa.ContainsKey(req.Comand.Chave))
-                                {
-                                    resposta = Encoding.ASCII.GetBytes("Não foi possível inserir o item, chave já existente.");
-                                }
-                                else
-                                {
-                                    resposta = Encoding.ASCII.GetBytes("Inserido com sucesso.");
-                                    Mapa.Add(req.Comand.Chave, req.Comand.Valor);
-                                }
-                                socket.SendTo(resposta, resposta.Length, SocketFlags.None, req.Remote);
-                                break;
-
-                            case (int)Comandos.UPDATE:
-
-                                if (Mapa.ContainsKey(req.Comand.Chave))
-                                {
-                                    resposta = Encoding.ASCII.GetBytes("Atualizacao efetuada com sucesso.");
-                                    Mapa[req.Comand.Chave] = req.Comand.Valor;
-                                }
-                                else
-                                {
-                                    resposta = Encoding.ASCII.GetBytes("Não foi possível atualizar, elemento inexistente.");
-                                }
-                                socket.SendTo(resposta, resposta.Length, SocketFlags.None, req.Remote);
-                                break;
-
-                            case (int)Comandos.READ:
-                                string data;
-                                
-                                if (!Mapa.TryGetValue(req.Comand.Chave, out data))
-                                {
-                                    resposta = Encoding.ASCII.GetBytes("Chave nao encontrada, elemento inexistente.");
-                                }
-                                else
-                                {
-                                    resposta = Encoding.ASCII.GetBytes(data);
-                                }
-                                socket.SendTo(resposta, resposta.Length, SocketFlags.None, req.Remote);
-                                break;
-
-                            case (int)Comandos.DELETE:
-                                if (Mapa.ContainsKey(req.Comand.Chave))
-                                {
-                                    Mapa.Remove(req.Comand.Chave);
-                                    resposta = Encoding.ASCII.GetBytes("Remocao efetuada com sucesso.");
-                                }
-                                else
-                                {
-                                    resposta = Encoding.ASCII.GetBytes("Não foi possível remover, elemento inexistente.");
-                                }
-                                socket.SendTo(resposta, resposta.Length, SocketFlags.None, req.Remote);
-                                break;
-                        }
+                        string resposta = "";
+                        byte[] resp;
+                        ProcessaComando(req.Comand, ref resposta);
+                        resp = Encoding.ASCII.GetBytes(resposta);
+                        socket.SendTo(resp, resposta.Length, SocketFlags.None, req.Remote);
                     }
                 }
             }

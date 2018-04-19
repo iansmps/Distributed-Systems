@@ -20,24 +20,64 @@ namespace Client
             IPAddress broadcast = IPAddress.Parse("127.0.0.1");
             IPEndPoint ep = new IPEndPoint(broadcast, 1500);
 
-            Comando comando = new Comando(Comandos.ADD, 1, "TESTANDO");
-            
+            Comando comando = new Comando(Comandos.READ, 1, "TESTANDO");
+            byte[] receive = new byte[1400];
             byte[] sendbuf = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(comando));
-
+            string final;
             s.SendTo(sendbuf, ep);
+            s.Receive(receive);
 
-            comando = new Comando(Comandos.READ, 1, "TESTANDO");
+            final = Encoding.UTF8.GetString(receive).TrimEnd('\0');
+
+            Console.WriteLine(final);
+
+            comando = new Comando(Comandos.READ, 2, "Batata");
 
             sendbuf = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(comando));
 
             s.SendTo(sendbuf, ep);
+            receive = new byte[1400];
+            s.Receive(receive);
+            
+            final = Encoding.UTF8.GetString(receive).TrimEnd('\0');
 
-            byte[] receive = new byte[1400];
+            Console.WriteLine(final);
+
+            comando = new Comando(Comandos.READ, 3, "Limao");
+
+            sendbuf = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(comando));
+
+            s.SendTo(sendbuf, ep);
+            receive = new byte[1400];
             s.Receive(receive);
 
-            string final = Encoding.UTF8.GetString(receive).TrimEnd('\0');
+            final = Encoding.UTF8.GetString(receive).TrimEnd('\0');
 
-            Console.WriteLine("Message sent to the broadcast address" + final);
+            Console.WriteLine(final);
+
+            comando = new Comando(Comandos.READ, 5, "Batata");
+
+            sendbuf = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(comando));
+
+            s.SendTo(sendbuf, ep);
+            receive = new byte[1400];
+            s.Receive(receive);
+
+            final = Encoding.UTF8.GetString(receive).TrimEnd('\0');
+
+            Console.WriteLine(final);
+
+            comando = new Comando(Comandos.READ, 6, "Mudou?");
+
+            sendbuf = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(comando));
+
+            s.SendTo(sendbuf, ep);
+            receive = new byte[1400];
+            s.Receive(receive);
+
+            final = Encoding.UTF8.GetString(receive).TrimEnd('\0');
+
+            Console.WriteLine(final);
         }
     }
 }
