@@ -31,6 +31,7 @@ namespace Server
 
         static int portaRecebe;
         static int portaEnvia;
+        static bool desliga = false;
 
         /// <summary>
         /// Thread principal do servidor, cria as outras threads e é responsável por receber os comandos e os escrever em filaComandos.
@@ -42,7 +43,15 @@ namespace Server
             int receivedDataLength;
             byte[] data = new byte[1400];
 
-
+            if (!File.Exists("portas.txt"))
+            {
+                var stream = File.Create("portas.txt");
+                stream.Close();
+                StreamWriter arq = new StreamWriter("portas.txt");
+                arq.WriteLine("1500");
+                arq.WriteLine("1600");
+                arq.Close();
+            }
             StreamReader file = new StreamReader("portas.txt");
             portaRecebe = int.Parse(file.ReadLine());
             portaEnvia =  int.Parse(file.ReadLine());
@@ -67,10 +76,10 @@ namespace Server
             threadComandos.Start();
             threadProcessaComando.Start();
             threadLogaDisco.Start();
-            
-            while (true)
+
+            while (!desliga)
             {
-                data = new byte[1400];
+                data = new byte[1500];
                 receivedDataLength = socket.ReceiveFrom(data, ref Remote);
 
                 string json = Encoding.ASCII.GetString(data, 0, receivedDataLength);
@@ -157,6 +166,9 @@ namespace Server
                         resposta = "Não foi possível remover, elemento inexistente.";
                     }
                     break;
+                case (int)Comandos.DESLIGAR:
+                    desliga = true;
+                    break;
             }
         }
 
@@ -203,7 +215,7 @@ namespace Server
                         while (filaLog.Count > 0)
                         {
                             req = filaLog.Dequeue();
-                            if (req.Comand.comand == (int)Comandos.READ)
+                            if (req.Comand.comand == (int)Comandos.READ || req.Comand.comand == (int)Comandos.DESLIGAR || req.Comand.comand == (int)Comandos.LISTAR)
                                 continue;
                             string comando = JsonConvert.SerializeObject(req.Comand);
                             file.WriteLine(comando);
@@ -235,9 +247,21 @@ namespace Server
                         req = filaProcessa.Dequeue();
                         string resposta = "";
                         byte[] resp;
-                        ProcessaComando(req.Comand, ref resposta);
-                        resp = Encoding.ASCII.GetBytes(resposta);
-                        socket.SendTo(resp, resposta.Length, SocketFlags.None, req.Remote);
+                        if(req.Comand.comand != (int)Comandos.LISTAR)
+                        {
+                            ProcessaComando(req.Comand, ref resposta);
+                            resp = Encoding.UTF8.GetBytes(resposta);
+                            socket.SendTo(resp, resposta.Length, SocketFlags.None, req.Remote);
+                        }
+                        else
+                        {
+                            foreach (KeyValuePair<long, string> entry in Mapa)
+                            {
+                                resposta = entry.Key + " - " + entry.Value;
+                                resp = Encoding.UTF8.GetBytes(resposta);
+                                socket.SendTo(resp, resposta.Length, SocketFlags.None, req.Remote);
+                            }
+                        }
                     }
                 }
             }

@@ -8,10 +8,10 @@ namespace Client
 {
     class Comando
     {
-        public long Chave { get; set; }
+        public int Chave { get; set; }
         public string Valor { get; set; }
         public int comand { get; set; }
-        public Comando(Comandos comando, long chave ,string valor)
+        public Comando(Comandos comando, int chave ,string valor)
         {
             this.Chave = chave;
             this.Valor = valor;
@@ -24,6 +24,9 @@ namespace Client
         ADD = 1,
         READ = 2,
         UPDATE = 3,
-        DELETE = 4
+        DELETE = 4,
+        LISTAR = 5,
+        DESLIGAR = 6
+        
     }
 }
