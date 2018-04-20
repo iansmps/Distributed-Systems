@@ -8,10 +8,10 @@ namespace Client
 {
     class Comando
     {
-        public int Chave { get; set; }
+        public long Chave { get; set; }
         public string Valor { get; set; }
         public int comand { get; set; }
-        public Comando(Comandos comando, int chave ,string valor)
+        public Comando(Comandos comando, long chave ,string valor)
         {
             this.Chave = chave;
             this.Valor = valor;

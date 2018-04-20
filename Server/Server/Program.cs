@@ -29,6 +29,9 @@ namespace Server
         /// <summary>Mapa</summary>
         static Dictionary<long, String> Mapa = new Dictionary<long, string>();
 
+        static int portaRecebe;
+        static int portaEnvia;
+
         /// <summary>
         /// Thread principal do servidor, cria as outras threads e é responsável por receber os comandos e os escrever em filaComandos.
         /// </summary>
@@ -38,7 +41,14 @@ namespace Server
             //Socket
             int receivedDataLength;
             byte[] data = new byte[1400];
-            IPEndPoint ip = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 1500);
+
+
+            StreamReader file = new StreamReader("portas.txt");
+            portaRecebe = int.Parse(file.ReadLine());
+            portaEnvia =  int.Parse(file.ReadLine());
+
+
+            IPEndPoint ip = new IPEndPoint(IPAddress.Parse("127.0.0.1"), portaRecebe);
 
             Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 
@@ -210,7 +220,7 @@ namespace Server
         static void ThreadProcessaComando()
         {
             Requisicao req;
-            IPEndPoint ip = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 1600);
+            IPEndPoint ip = new IPEndPoint(IPAddress.Parse("127.0.0.1"), portaEnvia);
 
             Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 

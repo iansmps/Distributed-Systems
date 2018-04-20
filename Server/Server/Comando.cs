@@ -10,9 +10,16 @@ namespace Server
 {
     class Comando
     {
-        public int Chave { get; set; }
+        public long Chave { get; set; }
         public string Valor { get; set; }
         public int comand { get; set; }
+
+        public Comando(Comandos comando, long chave, string valor)
+        {
+            this.Chave = chave;
+            this.Valor = valor;
+            this.comand = (int)comando;
+        }
     }
 
     public enum Comandos

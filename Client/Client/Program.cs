@@ -7,18 +7,22 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using Newtonsoft.Json;
+using System.IO;
 
 namespace Client
 {
     class Program
     {
+        static int porta;
+
         static void Main(string[] args)
         {
-            Socket s = new Socket(AddressFamily.InterNetwork, SocketType.Dgram,
-            ProtocolType.Udp);
+            Socket s = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            StreamReader file = new StreamReader("portas.txt");
+            porta = int.Parse(file.ReadLine());
 
-            IPAddress broadcast = IPAddress.Parse("127.0.0.1");
-            IPEndPoint ep = new IPEndPoint(broadcast, 1500);
+            IPAddress server = IPAddress.Parse("127.0.0.1");
+            IPEndPoint ep = new IPEndPoint(server, porta);
 
             Comando comando = new Comando(Comandos.READ, 1, "TESTANDO");
             byte[] receive = new byte[1400];
