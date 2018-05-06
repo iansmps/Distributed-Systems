@@ -8,6 +8,9 @@ using System.Net.Sockets;
 using Newtonsoft.Json;
 using System.IO;
 
+using Grpc.Core;
+using Proto;
+
 namespace Server
 {
     class Program
@@ -31,6 +34,8 @@ namespace Server
 
         static int portaRecebe;
         static int portaEnvia;
+        static int portaGRPC;
+        static string endereco = "";
         static bool desliga = false;
 
         /// <summary>
@@ -50,14 +55,17 @@ namespace Server
                 StreamWriter arq = new StreamWriter("portas.txt");
                 arq.WriteLine("1500");
                 arq.WriteLine("1600");
+                arq.WriteLine("1700");
+                arq.WriteLine("127.0.0.1");
                 arq.Close();
             }
             StreamReader file = new StreamReader("portas.txt");
             portaRecebe = int.Parse(file.ReadLine());
             portaEnvia =  int.Parse(file.ReadLine());
+            portaGRPC = int.Parse(file.ReadLine());
+            endereco = file.ReadLine();
 
-
-            IPEndPoint ip = new IPEndPoint(IPAddress.Parse("127.0.0.1"), portaRecebe);
+            IPEndPoint ip = new IPEndPoint(IPAddress.Parse(endereco), portaRecebe);
 
             Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 
@@ -72,10 +80,12 @@ namespace Server
             Task threadComandos = new Task(ThreadComandos);
             Task threadProcessaComando = new Task(ThreadProcessaComando);
             Task threadLogaDisco = new Task(ThreadLogaDisco);
+            Task threadGRPC = new Task(ThreadGRPC);
 
             threadComandos.Start();
             threadProcessaComando.Start();
             threadLogaDisco.Start();
+            threadGRPC.Start();
 
             while (!desliga)
             {
@@ -265,6 +275,20 @@ namespace Server
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Thread que recebe requisições GRPC.
+        /// </summary>
+        static void ThreadGRPC()
+        {
+            Grpc.Core.Server server = new Grpc.Core.Server
+            {
+                Services = { Greeter.BindService(new ProtoImpl()) },
+                Ports = { new ServerPort(endereco, portaGRPC, ServerCredentials.Insecure) }
+            };
+
+            server.Start();
         }
     }
 }
