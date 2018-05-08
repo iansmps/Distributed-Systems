@@ -21,6 +21,8 @@ namespace Server
         static readonly object blockProcessa = new object();
         /// <summary>Objeto para controlar o bloqueio da filaLog </summary>
         static readonly object blockLog = new object();
+
+        static readonly object blockRespostasGRPC = new object();
         
         /// <summary>Fila de comandos recebidos</summary>
         static Queue<Requisicao> filaComandos = new Queue<Requisicao>();
@@ -28,6 +30,8 @@ namespace Server
         static Queue<Requisicao> filaProcessa = new Queue<Requisicao>();
         /// <summary>Fila de comandos que serão gravados no log</summary>
         static Queue<Requisicao> filaLog = new Queue<Requisicao>();
+
+        static Dictionary<Requisicao, string> listaRespostasGRPC = new Dictionary<Requisicao, string>();
 
         /// <summary>Mapa</summary>
         static Dictionary<long, String> Mapa = new Dictionary<long, string>();
@@ -260,8 +264,19 @@ namespace Server
                         if(req.Comand.comand != (int)Comandos.LISTAR)
                         {
                             ProcessaComando(req.Comand, ref resposta);
-                            resp = Encoding.UTF8.GetBytes(resposta);
-                            socket.SendTo(resp, resposta.Length, SocketFlags.None, req.Remote);
+                            if(req.Remote != null)
+                            {
+                                resp = Encoding.UTF8.GetBytes(resposta);
+                                socket.SendTo(resp, resposta.Length, SocketFlags.None, req.Remote);
+                            }
+                            else
+                            {
+                                lock (blockRespostasGRPC)
+                                {
+                                    listaRespostasGRPC.Add(req, resposta);
+                                }
+                            }
+                            
                         }
                         else
                         {
@@ -282,9 +297,15 @@ namespace Server
         /// </summary>
         static void ThreadGRPC()
         {
+            ProtoImpl impl = new ProtoImpl();
+            impl.blockComandos = blockComandos;
+            impl.filaComandos = filaComandos;
+            impl.blockRespostasGRPC = blockRespostasGRPC;
+            impl.listaRespostasGRPC = listaRespostasGRPC;
+
             Grpc.Core.Server server = new Grpc.Core.Server
             {
-                Services = { Greeter.BindService(new ProtoImpl()) },
+                Services = { RPC.BindService(impl) },
                 Ports = { new ServerPort(endereco, portaGRPC, ServerCredentials.Insecure) }
             };
 

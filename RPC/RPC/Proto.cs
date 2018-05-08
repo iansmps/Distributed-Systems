@@ -22,16 +22,16 @@ namespace Proto {
     static ProtoReflection() {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
-            "Cgtwcm90by5wcm90bxIFcHJvdG8iHAoMSGVsbG9SZXF1ZXN0EgwKBG5hbWUY",
-            "ASABKAkiHQoKSGVsbG9SZXBseRIPCgdtZXNzYWdlGAEgASgJMj8KB0dyZWV0",
-            "ZXISNAoIU2F5SGVsbG8SEy5wcm90by5IZWxsb1JlcXVlc3QaES5wcm90by5I",
-            "ZWxsb1JlcGx5IgBCNgobaW8uZ3JwYy5leGFtcGxlcy5oZWxsb3dvcmxkQg9I",
-            "ZWxsb1dvcmxkUHJvdG9QAaICA0hMV2IGcHJvdG8z"));
+            "Cgtwcm90by5wcm90bxIFcHJvdG8iMwoGQ29tYW5kEg0KBWNoYXZlGAEgASgF",
+            "Eg0KBXZhbG9yGAIgASgJEgsKA2NtZBgDIAEoBSIcCghSZXNwb3N0YRIQCght",
+            "ZW5zYWdlbRgBIAEoCTIyCgNSUEMSKwoHQ29tYW5kbxINLnByb3RvLkNvbWFu",
+            "ZBoPLnByb3RvLlJlc3Bvc3RhIgBCNgobaW8uZ3JwYy5leGFtcGxlcy5oZWxs",
+            "b3dvcmxkQg9IZWxsb1dvcmxkUHJvdG9QAaICA0hMV2IGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::Proto.HelloRequest), global::Proto.HelloRequest.Parser, new[]{ "Name" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Proto.HelloReply), global::Proto.HelloReply.Parser, new[]{ "Message" }, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::Proto.Comand), global::Proto.Comand.Parser, new[]{ "Chave", "Valor", "Cmd" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Proto.Resposta), global::Proto.Resposta.Parser, new[]{ "Mensagem" }, null, null, null)
           }));
     }
     #endregion
@@ -41,10 +41,10 @@ namespace Proto {
   /// <summary>
   /// The request message containing the user's name.
   /// </summary>
-  public sealed partial class HelloRequest : pb::IMessage<HelloRequest> {
-    private static readonly pb::MessageParser<HelloRequest> _parser = new pb::MessageParser<HelloRequest>(() => new HelloRequest());
+  public sealed partial class Comand : pb::IMessage<Comand> {
+    private static readonly pb::MessageParser<Comand> _parser = new pb::MessageParser<Comand>(() => new Comand());
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public static pb::MessageParser<HelloRequest> Parser { get { return _parser; } }
+    public static pb::MessageParser<Comand> Parser { get { return _parser; } }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
@@ -57,54 +57,82 @@ namespace Proto {
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public HelloRequest() {
+    public Comand() {
       OnConstruction();
     }
 
     partial void OnConstruction();
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public HelloRequest(HelloRequest other) : this() {
-      name_ = other.name_;
+    public Comand(Comand other) : this() {
+      chave_ = other.chave_;
+      valor_ = other.valor_;
+      cmd_ = other.cmd_;
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public HelloRequest Clone() {
-      return new HelloRequest(this);
+    public Comand Clone() {
+      return new Comand(this);
     }
 
-    /// <summary>Field number for the "name" field.</summary>
-    public const int NameFieldNumber = 1;
-    private string name_ = "";
+    /// <summary>Field number for the "chave" field.</summary>
+    public const int ChaveFieldNumber = 1;
+    private int chave_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public string Name {
-      get { return name_; }
+    public int Chave {
+      get { return chave_; }
       set {
-        name_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+        chave_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "valor" field.</summary>
+    public const int ValorFieldNumber = 2;
+    private string valor_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public string Valor {
+      get { return valor_; }
+      set {
+        valor_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "cmd" field.</summary>
+    public const int CmdFieldNumber = 3;
+    private int cmd_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int Cmd {
+      get { return cmd_; }
+      set {
+        cmd_ = value;
       }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override bool Equals(object other) {
-      return Equals(other as HelloRequest);
+      return Equals(other as Comand);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public bool Equals(HelloRequest other) {
+    public bool Equals(Comand other) {
       if (ReferenceEquals(other, null)) {
         return false;
       }
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if (Name != other.Name) return false;
+      if (Chave != other.Chave) return false;
+      if (Valor != other.Valor) return false;
+      if (Cmd != other.Cmd) return false;
       return true;
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override int GetHashCode() {
       int hash = 1;
-      if (Name.Length != 0) hash ^= Name.GetHashCode();
+      if (Chave != 0) hash ^= Chave.GetHashCode();
+      if (Valor.Length != 0) hash ^= Valor.GetHashCode();
+      if (Cmd != 0) hash ^= Cmd.GetHashCode();
       return hash;
     }
 
@@ -115,28 +143,48 @@ namespace Proto {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void WriteTo(pb::CodedOutputStream output) {
-      if (Name.Length != 0) {
-        output.WriteRawTag(10);
-        output.WriteString(Name);
+      if (Chave != 0) {
+        output.WriteRawTag(8);
+        output.WriteInt32(Chave);
+      }
+      if (Valor.Length != 0) {
+        output.WriteRawTag(18);
+        output.WriteString(Valor);
+      }
+      if (Cmd != 0) {
+        output.WriteRawTag(24);
+        output.WriteInt32(Cmd);
       }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
       int size = 0;
-      if (Name.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeStringSize(Name);
+      if (Chave != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(Chave);
+      }
+      if (Valor.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Valor);
+      }
+      if (Cmd != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(Cmd);
       }
       return size;
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public void MergeFrom(HelloRequest other) {
+    public void MergeFrom(Comand other) {
       if (other == null) {
         return;
       }
-      if (other.Name.Length != 0) {
-        Name = other.Name;
+      if (other.Chave != 0) {
+        Chave = other.Chave;
+      }
+      if (other.Valor.Length != 0) {
+        Valor = other.Valor;
+      }
+      if (other.Cmd != 0) {
+        Cmd = other.Cmd;
       }
     }
 
@@ -148,8 +196,16 @@ namespace Proto {
           default:
             input.SkipLastField();
             break;
-          case 10: {
-            Name = input.ReadString();
+          case 8: {
+            Chave = input.ReadInt32();
+            break;
+          }
+          case 18: {
+            Valor = input.ReadString();
+            break;
+          }
+          case 24: {
+            Cmd = input.ReadInt32();
             break;
           }
         }
@@ -161,10 +217,10 @@ namespace Proto {
   /// <summary>
   /// The response message containing the greetings
   /// </summary>
-  public sealed partial class HelloReply : pb::IMessage<HelloReply> {
-    private static readonly pb::MessageParser<HelloReply> _parser = new pb::MessageParser<HelloReply>(() => new HelloReply());
+  public sealed partial class Resposta : pb::IMessage<Resposta> {
+    private static readonly pb::MessageParser<Resposta> _parser = new pb::MessageParser<Resposta>(() => new Resposta());
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public static pb::MessageParser<HelloReply> Parser { get { return _parser; } }
+    public static pb::MessageParser<Resposta> Parser { get { return _parser; } }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
@@ -177,54 +233,54 @@ namespace Proto {
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public HelloReply() {
+    public Resposta() {
       OnConstruction();
     }
 
     partial void OnConstruction();
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public HelloReply(HelloReply other) : this() {
-      message_ = other.message_;
+    public Resposta(Resposta other) : this() {
+      mensagem_ = other.mensagem_;
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public HelloReply Clone() {
-      return new HelloReply(this);
+    public Resposta Clone() {
+      return new Resposta(this);
     }
 
-    /// <summary>Field number for the "message" field.</summary>
-    public const int MessageFieldNumber = 1;
-    private string message_ = "";
+    /// <summary>Field number for the "mensagem" field.</summary>
+    public const int MensagemFieldNumber = 1;
+    private string mensagem_ = "";
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public string Message {
-      get { return message_; }
+    public string Mensagem {
+      get { return mensagem_; }
       set {
-        message_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+        mensagem_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
       }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override bool Equals(object other) {
-      return Equals(other as HelloReply);
+      return Equals(other as Resposta);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public bool Equals(HelloReply other) {
+    public bool Equals(Resposta other) {
       if (ReferenceEquals(other, null)) {
         return false;
       }
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if (Message != other.Message) return false;
+      if (Mensagem != other.Mensagem) return false;
       return true;
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override int GetHashCode() {
       int hash = 1;
-      if (Message.Length != 0) hash ^= Message.GetHashCode();
+      if (Mensagem.Length != 0) hash ^= Mensagem.GetHashCode();
       return hash;
     }
 
@@ -235,28 +291,28 @@ namespace Proto {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void WriteTo(pb::CodedOutputStream output) {
-      if (Message.Length != 0) {
+      if (Mensagem.Length != 0) {
         output.WriteRawTag(10);
-        output.WriteString(Message);
+        output.WriteString(Mensagem);
       }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
       int size = 0;
-      if (Message.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeStringSize(Message);
+      if (Mensagem.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Mensagem);
       }
       return size;
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public void MergeFrom(HelloReply other) {
+    public void MergeFrom(Resposta other) {
       if (other == null) {
         return;
       }
-      if (other.Message.Length != 0) {
-        Message = other.Message;
+      if (other.Mensagem.Length != 0) {
+        Mensagem = other.Mensagem;
       }
     }
 
@@ -269,7 +325,7 @@ namespace Proto {
             input.SkipLastField();
             break;
           case 10: {
-            Message = input.ReadString();
+            Mensagem = input.ReadString();
             break;
           }
         }

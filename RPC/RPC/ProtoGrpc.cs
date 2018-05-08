@@ -9,21 +9,21 @@ using grpc = global::Grpc.Core;
 
 namespace Proto {
   /// <summary>
-  /// The greeting service definition.
+  /// Serviço.
   /// </summary>
-  public static partial class Greeter
+  public static partial class RPC
   {
-    static readonly string __ServiceName = "proto.Greeter";
+    static readonly string __ServiceName = "proto.RPC";
 
-    static readonly grpc::Marshaller<global::Proto.HelloRequest> __Marshaller_HelloRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Proto.HelloRequest.Parser.ParseFrom);
-    static readonly grpc::Marshaller<global::Proto.HelloReply> __Marshaller_HelloReply = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Proto.HelloReply.Parser.ParseFrom);
+    static readonly grpc::Marshaller<global::Proto.Comand> __Marshaller_Comand = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Proto.Comand.Parser.ParseFrom);
+    static readonly grpc::Marshaller<global::Proto.Resposta> __Marshaller_Resposta = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Proto.Resposta.Parser.ParseFrom);
 
-    static readonly grpc::Method<global::Proto.HelloRequest, global::Proto.HelloReply> __Method_SayHello = new grpc::Method<global::Proto.HelloRequest, global::Proto.HelloReply>(
+    static readonly grpc::Method<global::Proto.Comand, global::Proto.Resposta> __Method_Comando = new grpc::Method<global::Proto.Comand, global::Proto.Resposta>(
         grpc::MethodType.Unary,
         __ServiceName,
-        "SayHello",
-        __Marshaller_HelloRequest,
-        __Marshaller_HelloReply);
+        "Comando",
+        __Marshaller_Comand,
+        __Marshaller_Resposta);
 
     /// <summary>Service descriptor</summary>
     public static global::Google.Protobuf.Reflection.ServiceDescriptor Descriptor
@@ -31,102 +31,102 @@ namespace Proto {
       get { return global::Proto.ProtoReflection.Descriptor.Services[0]; }
     }
 
-    /// <summary>Base class for server-side implementations of Greeter</summary>
-    public abstract partial class GreeterBase
+    /// <summary>Base class for server-side implementations of RPC</summary>
+    public abstract partial class RPCBase
     {
       /// <summary>
-      /// Sends a greeting
+      /// Envia comando
       /// </summary>
       /// <param name="request">The request received from the client.</param>
       /// <param name="context">The context of the server-side call handler being invoked.</param>
       /// <returns>The response to send back to the client (wrapped by a task).</returns>
-      public virtual global::System.Threading.Tasks.Task<global::Proto.HelloReply> SayHello(global::Proto.HelloRequest request, grpc::ServerCallContext context)
+      public virtual global::System.Threading.Tasks.Task<global::Proto.Resposta> Comando(global::Proto.Comand request, grpc::ServerCallContext context)
       {
         throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
       }
 
     }
 
-    /// <summary>Client for Greeter</summary>
-    public partial class GreeterClient : grpc::ClientBase<GreeterClient>
+    /// <summary>Client for RPC</summary>
+    public partial class RPCClient : grpc::ClientBase<RPCClient>
     {
-      /// <summary>Creates a new client for Greeter</summary>
+      /// <summary>Creates a new client for RPC</summary>
       /// <param name="channel">The channel to use to make remote calls.</param>
-      public GreeterClient(grpc::Channel channel) : base(channel)
+      public RPCClient(grpc::Channel channel) : base(channel)
       {
       }
-      /// <summary>Creates a new client for Greeter that uses a custom <c>CallInvoker</c>.</summary>
+      /// <summary>Creates a new client for RPC that uses a custom <c>CallInvoker</c>.</summary>
       /// <param name="callInvoker">The callInvoker to use to make remote calls.</param>
-      public GreeterClient(grpc::CallInvoker callInvoker) : base(callInvoker)
+      public RPCClient(grpc::CallInvoker callInvoker) : base(callInvoker)
       {
       }
       /// <summary>Protected parameterless constructor to allow creation of test doubles.</summary>
-      protected GreeterClient() : base()
+      protected RPCClient() : base()
       {
       }
       /// <summary>Protected constructor to allow creation of configured clients.</summary>
       /// <param name="configuration">The client configuration.</param>
-      protected GreeterClient(ClientBaseConfiguration configuration) : base(configuration)
+      protected RPCClient(ClientBaseConfiguration configuration) : base(configuration)
       {
       }
 
       /// <summary>
-      /// Sends a greeting
+      /// Envia comando
       /// </summary>
       /// <param name="request">The request to send to the server.</param>
       /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
       /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
       /// <param name="cancellationToken">An optional token for canceling the call.</param>
       /// <returns>The response received from the server.</returns>
-      public virtual global::Proto.HelloReply SayHello(global::Proto.HelloRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      public virtual global::Proto.Resposta Comando(global::Proto.Comand request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
       {
-        return SayHello(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+        return Comando(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
       /// <summary>
-      /// Sends a greeting
+      /// Envia comando
       /// </summary>
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>
       /// <returns>The response received from the server.</returns>
-      public virtual global::Proto.HelloReply SayHello(global::Proto.HelloRequest request, grpc::CallOptions options)
+      public virtual global::Proto.Resposta Comando(global::Proto.Comand request, grpc::CallOptions options)
       {
-        return CallInvoker.BlockingUnaryCall(__Method_SayHello, null, options, request);
+        return CallInvoker.BlockingUnaryCall(__Method_Comando, null, options, request);
       }
       /// <summary>
-      /// Sends a greeting
+      /// Envia comando
       /// </summary>
       /// <param name="request">The request to send to the server.</param>
       /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
       /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
       /// <param name="cancellationToken">An optional token for canceling the call.</param>
       /// <returns>The call object.</returns>
-      public virtual grpc::AsyncUnaryCall<global::Proto.HelloReply> SayHelloAsync(global::Proto.HelloRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      public virtual grpc::AsyncUnaryCall<global::Proto.Resposta> ComandoAsync(global::Proto.Comand request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
       {
-        return SayHelloAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+        return ComandoAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
       /// <summary>
-      /// Sends a greeting
+      /// Envia comando
       /// </summary>
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>
       /// <returns>The call object.</returns>
-      public virtual grpc::AsyncUnaryCall<global::Proto.HelloReply> SayHelloAsync(global::Proto.HelloRequest request, grpc::CallOptions options)
+      public virtual grpc::AsyncUnaryCall<global::Proto.Resposta> ComandoAsync(global::Proto.Comand request, grpc::CallOptions options)
       {
-        return CallInvoker.AsyncUnaryCall(__Method_SayHello, null, options, request);
+        return CallInvoker.AsyncUnaryCall(__Method_Comando, null, options, request);
       }
       /// <summary>Creates a new instance of client from given <c>ClientBaseConfiguration</c>.</summary>
-      protected override GreeterClient NewInstance(ClientBaseConfiguration configuration)
+      protected override RPCClient NewInstance(ClientBaseConfiguration configuration)
       {
-        return new GreeterClient(configuration);
+        return new RPCClient(configuration);
       }
     }
 
     /// <summary>Creates service definition that can be registered with a server</summary>
     /// <param name="serviceImpl">An object implementing the server-side handling logic.</param>
-    public static grpc::ServerServiceDefinition BindService(GreeterBase serviceImpl)
+    public static grpc::ServerServiceDefinition BindService(RPCBase serviceImpl)
     {
       return grpc::ServerServiceDefinition.CreateBuilder()
-          .AddMethod(__Method_SayHello, serviceImpl.SayHello).Build();
+          .AddMethod(__Method_Comando, serviceImpl.Comando).Build();
     }
 
   }

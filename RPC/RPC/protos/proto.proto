@@ -7,18 +7,20 @@ option objc_class_prefix = "HLW";
 
 package proto;
 
-// The greeting service definition.
-service Greeter {
-  // Sends a greeting
-  rpc SayHello (HelloRequest) returns (HelloReply) {}
+// Serviço.
+service RPC {
+  // Envia comando
+  rpc Comando (Comand) returns (Resposta) {}
 }
 
 // The request message containing the user's name.
-message HelloRequest {
-  string name = 1;
+message Comand {
+  int32 chave = 1;
+  string valor = 2;
+  int32 cmd = 3;
 }
 
 // The response message containing the greetings
-message HelloReply {
-  string message = 1;
+message Resposta {
+  string mensagem = 1;
 }
