@@ -26,7 +26,7 @@ namespace ClientGrpc
         UPDATE = 3,
         DELETE = 4,
         LISTAR = 5,
-        DESLIGAR = 6
-
+        DESLIGAR = 6,
+        MONITORAR = 7
     }
 }

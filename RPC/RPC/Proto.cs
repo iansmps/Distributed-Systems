@@ -24,9 +24,11 @@ namespace Proto {
           string.Concat(
             "Cgtwcm90by5wcm90bxIFcHJvdG8iMwoGQ29tYW5kEg0KBWNoYXZlGAEgASgF",
             "Eg0KBXZhbG9yGAIgASgJEgsKA2NtZBgDIAEoBSIcCghSZXNwb3N0YRIQCght",
-            "ZW5zYWdlbRgBIAEoCTIyCgNSUEMSKwoHQ29tYW5kbxINLnByb3RvLkNvbWFu",
-            "ZBoPLnByb3RvLlJlc3Bvc3RhIgBCNgobaW8uZ3JwYy5leGFtcGxlcy5oZWxs",
-            "b3dvcmxkQg9IZWxsb1dvcmxkUHJvdG9QAaICA0hMV2IGcHJvdG8z"));
+            "ZW5zYWdlbRgBIAEoCTKRAQoDUlBDEisKB0NvbWFuZG8SDS5wcm90by5Db21h",
+            "bmQaDy5wcm90by5SZXNwb3N0YSIAEiwKBkxpc3RhchINLnByb3RvLkNvbWFu",
+            "ZBoPLnByb3RvLlJlc3Bvc3RhIgAwARIvCglNb25pdG9yYXISDS5wcm90by5D",
+            "b21hbmQaDy5wcm90by5SZXNwb3N0YSIAMAFCNgobaW8uZ3JwYy5leGFtcGxl",
+            "cy5oZWxsb3dvcmxkQg9IZWxsb1dvcmxkUHJvdG9QAaICA0hMV2IGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {

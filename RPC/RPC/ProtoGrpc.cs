@@ -25,6 +25,20 @@ namespace Proto {
         __Marshaller_Comand,
         __Marshaller_Resposta);
 
+    static readonly grpc::Method<global::Proto.Comand, global::Proto.Resposta> __Method_Listar = new grpc::Method<global::Proto.Comand, global::Proto.Resposta>(
+        grpc::MethodType.ServerStreaming,
+        __ServiceName,
+        "Listar",
+        __Marshaller_Comand,
+        __Marshaller_Resposta);
+
+    static readonly grpc::Method<global::Proto.Comand, global::Proto.Resposta> __Method_Monitorar = new grpc::Method<global::Proto.Comand, global::Proto.Resposta>(
+        grpc::MethodType.ServerStreaming,
+        __ServiceName,
+        "Monitorar",
+        __Marshaller_Comand,
+        __Marshaller_Resposta);
+
     /// <summary>Service descriptor</summary>
     public static global::Google.Protobuf.Reflection.ServiceDescriptor Descriptor
     {
@@ -41,6 +55,16 @@ namespace Proto {
       /// <param name="context">The context of the server-side call handler being invoked.</param>
       /// <returns>The response to send back to the client (wrapped by a task).</returns>
       public virtual global::System.Threading.Tasks.Task<global::Proto.Resposta> Comando(global::Proto.Comand request, grpc::ServerCallContext context)
+      {
+        throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
+      }
+
+      public virtual global::System.Threading.Tasks.Task Listar(global::Proto.Comand request, grpc::IServerStreamWriter<global::Proto.Resposta> responseStream, grpc::ServerCallContext context)
+      {
+        throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
+      }
+
+      public virtual global::System.Threading.Tasks.Task Monitorar(global::Proto.Comand request, grpc::IServerStreamWriter<global::Proto.Resposta> responseStream, grpc::ServerCallContext context)
       {
         throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
       }
@@ -114,6 +138,22 @@ namespace Proto {
       {
         return CallInvoker.AsyncUnaryCall(__Method_Comando, null, options, request);
       }
+      public virtual grpc::AsyncServerStreamingCall<global::Proto.Resposta> Listar(global::Proto.Comand request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return Listar(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      public virtual grpc::AsyncServerStreamingCall<global::Proto.Resposta> Listar(global::Proto.Comand request, grpc::CallOptions options)
+      {
+        return CallInvoker.AsyncServerStreamingCall(__Method_Listar, null, options, request);
+      }
+      public virtual grpc::AsyncServerStreamingCall<global::Proto.Resposta> Monitorar(global::Proto.Comand request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return Monitorar(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      public virtual grpc::AsyncServerStreamingCall<global::Proto.Resposta> Monitorar(global::Proto.Comand request, grpc::CallOptions options)
+      {
+        return CallInvoker.AsyncServerStreamingCall(__Method_Monitorar, null, options, request);
+      }
       /// <summary>Creates a new instance of client from given <c>ClientBaseConfiguration</c>.</summary>
       protected override RPCClient NewInstance(ClientBaseConfiguration configuration)
       {
@@ -126,7 +166,9 @@ namespace Proto {
     public static grpc::ServerServiceDefinition BindService(RPCBase serviceImpl)
     {
       return grpc::ServerServiceDefinition.CreateBuilder()
-          .AddMethod(__Method_Comando, serviceImpl.Comando).Build();
+          .AddMethod(__Method_Comando, serviceImpl.Comando)
+          .AddMethod(__Method_Listar, serviceImpl.Listar)
+          .AddMethod(__Method_Monitorar, serviceImpl.Monitorar).Build();
     }
 
   }

@@ -11,6 +11,8 @@ package proto;
 service RPC {
   // Envia comando
   rpc Comando (Comand) returns (Resposta) {}
+  rpc Listar (Comand) returns (stream Resposta){}
+  rpc Monitorar (Comand) returns (stream Resposta){}
 }
 
 // The request message containing the user's name.

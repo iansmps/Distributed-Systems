@@ -10,6 +10,7 @@ using System.IO;
 
 using Grpc.Core;
 using Proto;
+using System.Threading;
 
 namespace Server
 {
@@ -32,6 +33,8 @@ namespace Server
         static Queue<Requisicao> filaLog = new Queue<Requisicao>();
 
         static Dictionary<Requisicao, string> listaRespostasGRPC = new Dictionary<Requisicao, string>();
+
+        static List<Requisicao> Monitorados = new List<Requisicao>();
 
         /// <summary>Mapa</summary>
         static Dictionary<long, String> Mapa = new Dictionary<long, string>();
@@ -261,7 +264,7 @@ namespace Server
                         req = filaProcessa.Dequeue();
                         string resposta = "";
                         byte[] resp;
-                        if(req.Comand.comand != (int)Comandos.LISTAR)
+                        if(req.Comand.comand != (int)Comandos.LISTAR && req.Comand.comand != (int)Comandos.MONITORAR)
                         {
                             ProcessaComando(req.Comand, ref resposta);
                             if(req.Remote != null)
@@ -276,15 +279,113 @@ namespace Server
                                     listaRespostasGRPC.Add(req, resposta);
                                 }
                             }
-                            
                         }
-                        else
+                        else if(req.Comand.comand == (int)Comandos.LISTAR)
                         {
-                            foreach (KeyValuePair<long, string> entry in Mapa)
+                            if (req.Remote != null)
                             {
-                                resposta = entry.Key + " - " + entry.Value;
-                                resp = Encoding.UTF8.GetBytes(resposta);
-                                socket.SendTo(resp, resposta.Length, SocketFlags.None, req.Remote);
+                                foreach (KeyValuePair<long, string> entry in Mapa)
+                                {
+                                    resposta = entry.Key + " - " + entry.Value;
+                                    resp = Encoding.UTF8.GetBytes(resposta);
+                                    socket.SendTo(resp, resposta.Length, SocketFlags.None, req.Remote);
+                                }
+                            }
+                            else
+                            {
+                                foreach (KeyValuePair<long, string> entry in Mapa)
+                                {
+                                    resposta = entry.Key + " - " + entry.Value;
+                                    lock (req.block)
+                                    {
+                                        req.respostas.Enqueue(resposta);
+                                    }
+                                }
+                                lock (req.block)
+                                {
+                                    req.HaRespostas = false;
+                                }
+                            }
+                        }
+                        else if(req.Comand.comand == (int)Comandos.MONITORAR)
+                        {
+                            Requisicao existe = null;
+                            if (!Mapa.ContainsKey(req.Comand.Chave))
+                            {
+                                lock (req.block)
+                                {
+                                    req.respostas.Enqueue("Chave inexistente.");
+                                    req.HaRespostas = false;
+                                    continue;
+                                }
+                            }
+                            foreach (Requisicao r in Monitorados)
+                            {
+                                if(r.EstaMonitorando(req.Comand.Chave) && r.context.Peer == req.context.Peer)
+                                {
+                                    existe = r;
+                                }
+                            }
+                            if (existe != null)
+                            {
+                                lock(req.block){
+                                    lock (Monitorados)
+                                    {
+                                        Monitorados.Remove(existe);
+                                    }
+                                    
+                                    lock (existe.block)
+                                    {
+                                        existe.HaRespostas = false;
+                                    }
+                                    req.respostas.Enqueue("Monitoramento da chave " + req.Comand.Chave + " parado com sucesso.");
+                                    req.HaRespostas = false;
+                                }
+                            }
+                            else
+                            {
+                                req.monitora = req.Comand.Chave;
+                                lock (Monitorados)
+                                {
+                                    Monitorados.Add(req);
+                                }
+                                
+                                lock (req.block)
+                                {
+                                    req.respostas.Enqueue("Monitoramento da chave " + req.Comand.Chave + " iniciado com sucesso.");
+                                }
+                            }
+                        }
+
+                        List<Requisicao> remover = new List<Requisicao>();
+                        lock (Monitorados)
+                        {
+                            foreach (Requisicao r in Monitorados)
+                            {
+                                if (req.Comand.Chave == r.monitora)
+                                {
+                                    lock (r.block)
+                                    {
+                                        if (req.Comand.comand == (int)Comandos.UPDATE)
+                                        {
+                                            r.respostas.Enqueue("Valor da chave " + r.Comand.Chave + " atualizado.\nNovo valor: " + req.Comand.Valor);
+                                        }
+                                        else if (req.Comand.comand == (int)Comandos.DELETE)
+                                        {
+                                            remover.Add(r);
+                                            r.respostas.Enqueue("Chave " + r.Comand.Chave + " deletada.\nParando monitoramento.");
+                                            r.HaRespostas = false;
+                                        }
+                                    }
+                                }
+                            }
+                        
+                        }
+                        lock (Monitorados)
+                        {
+                            foreach (Requisicao r in remover)
+                            {
+                                Monitorados.Remove(r);
                             }
                         }
                     }

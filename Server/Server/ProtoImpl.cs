@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Proto;
 using Grpc.Core;
+using System.Threading;
 
 namespace Server
 {
@@ -28,6 +29,64 @@ namespace Server
             return Task.FromResult(ProcessaComando(req));
         }
 
+        public override async Task Listar(Comand comand, IServerStreamWriter<Resposta> responseStream, ServerCallContext context)
+        {
+            Comando comando = new Comando((Comandos)comand.Cmd, comand.Chave, comand.Valor);
+            Requisicao req = new Requisicao(context, comando);
+            string resposta = "";
+            lock (blockComandos)
+            {
+                filaComandos.Enqueue(req);
+            }
+            bool flag = true;
+            while (flag)
+            {
+                resposta = "";
+                lock (req.block)
+                {
+                    if (req.respostas.Count > 0)
+                        resposta = req.respostas.Dequeue();
+                    if (!req.HaRespostas && req.respostas.Count <= 0) flag = false;   
+                }
+
+                if(resposta != "")
+                {
+                    Resposta resp = new Resposta();
+                    resp.Mensagem = resposta;
+                    await responseStream.WriteAsync(resp);
+                }       
+            }
+        }
+
+        public override async Task Monitorar(Comand comand, IServerStreamWriter<Resposta> responseStream, ServerCallContext context)
+        {
+            Comando comando = new Comando((Comandos)comand.Cmd, comand.Chave, comand.Valor);
+            Requisicao req = new Requisicao(context, comando);
+            string resposta = "";
+            lock (blockComandos)
+            {
+                filaComandos.Enqueue(req);
+            }
+            bool flag = true;
+
+            while (flag)
+            {
+                resposta = "";
+                lock (req.block)
+                {
+                    if (req.respostas.Count > 0)
+                        resposta = req.respostas.Dequeue();
+                    if (!req.HaRespostas && req.respostas.Count <= 0) flag = false;
+                }
+
+                if (resposta != "")
+                {
+                    Resposta resp = new Resposta();
+                    resp.Mensagem = resposta;
+                    await responseStream.WriteAsync(resp);
+                }
+            }
+        }
 
         public Resposta ProcessaComando(Requisicao req)
         {
