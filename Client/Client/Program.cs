@@ -46,8 +46,8 @@ namespace Client
             Task threadReceive;
             while (true)
             {
-                Console.WriteLine("Qual comando(ADD-1/READ-2/UPDATE-3/DELETE-4/LISTAR-5/DESLIGAR-6)");
-                if (!int.TryParse(Console.ReadLine(), out comand) || comand <= 0 || comand > 6)
+                Console.WriteLine("Qual comando(ADD-1/READ-2/UPDATE-3/DELETE-4/LISTAR-5/DESLIGAR-6/SNAPSHOT-8)");
+                if (!int.TryParse(Console.ReadLine(), out comand) || comand <= 0 || comand > 8)
                 {
                     Console.WriteLine("Comando Inválido!");
                     continue;
@@ -123,6 +123,17 @@ namespace Client
                         break;
                     case (int)Comandos.LISTAR:
                         comando = new Comando(Comandos.LISTAR, 0, "c");
+                        sendbuf = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(comando));
+                        s.SendTo(sendbuf, ep);
+                        break;
+                    case (int)Comandos.SNAPSHOT:
+                        Console.WriteLine("Insira o tempo(segundos): ");
+                        if (!int.TryParse(Console.ReadLine(), out chave))
+                        {
+                            Console.WriteLine("Tempo inválido");
+                            continue;
+                        }
+                        comando = new Comando(Comandos.SNAPSHOT, chave, "c");
                         sendbuf = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(comando));
                         s.SendTo(sendbuf, ep);
                         break;

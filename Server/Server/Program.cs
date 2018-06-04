@@ -45,6 +45,10 @@ namespace Server
         static string endereco = "";
         static bool desliga = false;
 
+        static int segundos = 60;
+        static int snap = 0;
+        static readonly object blockSegundos = new object();
+
         /// <summary>
         /// Thread principal do servidor, cria as outras threads e é responsável por receber os comandos e os escrever em filaComandos.
         /// </summary>
@@ -88,11 +92,13 @@ namespace Server
             Task threadProcessaComando = new Task(ThreadProcessaComando);
             Task threadLogaDisco = new Task(ThreadLogaDisco);
             Task threadGRPC = new Task(ThreadGRPC);
+            Task threadSnapshot = new Task(ThreadSnapshot);
 
             threadComandos.Start();
             threadProcessaComando.Start();
             threadLogaDisco.Start();
             threadGRPC.Start();
+            threadSnapshot.Start();
 
             while (!desliga)
             {
@@ -114,14 +120,42 @@ namespace Server
         {
             Comando comando;
             string resposta = "";
-            if (!File.Exists("json.txt"))
+
+            for (int i = 1; i <= 3; i++)
             {
-                var stream = File.Create("json.txt");
+                if (File.Exists("snapshot" + i + ".txt"))
+                {
+                    snap = i;
+                }
+            }
+
+            if (snap == 0)
+            {
+                var stream = File.Create("snapshot1.txt");
+                snap = 1;
                 stream.Close();
             }
-            using (StreamReader file = new StreamReader("json.txt"))
+            else
+            {
+                if(snap == 3 && File.Exists("snapshot1.txt"))
+                {
+                    snap = 1;
+                }
+            }
+
+            using (StreamReader file = new StreamReader("snapshot"+snap+".txt"))
             {
                 while(!file.EndOfStream)
+                {
+                    comando = JsonConvert.DeserializeObject<Comando>(file.ReadLine());
+                    ProcessaComando(comando, ref resposta);
+                }
+                file.Close();
+            }
+
+            using (StreamReader file = new StreamReader("json.txt"))
+            {
+                while (!file.EndOfStream)
                 {
                     comando = JsonConvert.DeserializeObject<Comando>(file.ReadLine());
                     ProcessaComando(comando, ref resposta);
@@ -185,6 +219,21 @@ namespace Server
                     break;
                 case (int)Comandos.DESLIGAR:
                     desliga = true;
+                    break;
+                case (int)Comandos.SNAPSHOT:
+                    lock (blockSegundos)
+                    {
+                        if (comando.Chave >= 10)
+                        {
+                            segundos = comando.Chave;
+                            resposta = "Tempo do snapshot atualizado com sucesso para o valor de: " + comando.Chave;
+                        }
+                        else
+                        {
+                            resposta = "Não é possível gravar o snapshot com tempo menor de 10 segundos.";
+                        }
+                        
+                    }
                     break;
             }
         }
@@ -411,6 +460,73 @@ namespace Server
             };
 
             server.Start();
+        }
+
+        static void ThreadSnapshot()
+        {
+            int intervalo;
+            while (true)
+            {
+                lock (blockSegundos)
+                {
+                    intervalo = segundos * 1000;
+                }
+
+                Thread.Sleep(intervalo);
+
+                SalvaSnapshot();
+            }
+        }
+
+        static void SalvaSnapshot()
+        {
+            FileStream stream;
+            int snapshot = 0;
+
+
+            for(int i = 1; i <= 3; i++)
+            {
+                if (!File.Exists("snapshot" + i + ".txt"))
+                {
+                    snapshot = i;
+                    i = 4;
+                }
+            }
+
+            if (snapshot == 1) { File.Delete("snapshot2.txt"); }
+            else
+            if (snapshot == 2) { File.Delete("snapshot3.txt"); }
+            else
+            if (snapshot == 3) { File.Delete("snapshot1.txt"); }
+
+            stream = File.Create("snapshot" + snapshot + ".txt");
+            stream.Close();
+
+            using (StreamWriter file = new StreamWriter("snapshot" + snapshot + ".txt", true))
+            {
+                Comando cmd;
+                string comando = "";
+                lock (Mapa){
+                    foreach(KeyValuePair<long, string> m in Mapa)
+                    {
+                        cmd = new Comando(Comandos.ADD, (int)m.Key, m.Value);
+                        comando = JsonConvert.SerializeObject(cmd);
+                        file.WriteLine(comando);
+                    }
+                }
+                
+                file.Close();
+            }
+
+            lock (blockLog)
+            {
+                if (File.Exists("json.txt"))
+                {
+                    File.Delete("json.txt");
+                    stream = File.Create("json.txt");
+                    stream.Close();
+                }
+            }
         }
     }
 }

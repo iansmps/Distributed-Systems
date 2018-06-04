@@ -27,6 +27,7 @@ namespace Client
         DELETE = 4,
         LISTAR = 5,
         DESLIGAR = 6,
-        MONITORAR = 7
+        MONITORAR = 7,
+        SNAPSHOT = 8
     }
 }
