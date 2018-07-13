@@ -7,115 +7,62 @@ using System.Net;
 using System.Net.Sockets;
 using Newtonsoft.Json;
 using System.IO;
-
-using Grpc.Core;
-using Proto;
 using System.Threading;
+using KafkaNet;
+using KafkaNet.Model;
+using KafkaNet.Protocol;
 
 namespace Server
 {
     class Program
     {
-        /// <summary>Objeto para controlar o bloqueio da filaComandos </summary>
-        static readonly object blockComandos = new object();
-        /// <summary>Objeto para controlar o bloqueio da filaProcessa </summary>
-        static readonly object blockProcessa = new object();
-        /// <summary>Objeto para controlar o bloqueio da filaLog </summary>
         static readonly object blockLog = new object();
-
-        static readonly object blockRespostasGRPC = new object();
-        
-        /// <summary>Fila de comandos recebidos</summary>
-        static Queue<Requisicao> filaComandos = new Queue<Requisicao>();
-        /// <summary>Fila de comandos para serem processados</summary>
-        static Queue<Requisicao> filaProcessa = new Queue<Requisicao>();
-        /// <summary>Fila de comandos que serão gravados no log</summary>
-        static Queue<Requisicao> filaLog = new Queue<Requisicao>();
-
-        static Dictionary<Requisicao, string> listaRespostasGRPC = new Dictionary<Requisicao, string>();
-
-        static List<Requisicao> Monitorados = new List<Requisicao>();
 
         /// <summary>Mapa</summary>
         static Dictionary<long, String> Mapa = new Dictionary<long, string>();
 
-        static int portaRecebe;
-        static int portaEnvia;
-        static int portaGRPC;
-        static string endereco = "";
         static bool desliga = false;
-
-        static int segundos = 60;
+        static int offint;
+        static int segundos = 10;
         static int snap = 0;
         static readonly object blockSegundos = new object();
 
         /// <summary>
-        /// Thread principal do servidor, cria as outras threads e é responsável por receber os comandos e os escrever em filaComandos.
+        /// Thread principal do servidor, cria as outras threads.
         /// </summary>
-        /// <param name="args"></param>
         static void Main(string[] args)
         {
-            //Socket
-            int receivedDataLength;
-            byte[] data = new byte[1400];
 
             if (!File.Exists("portas.txt"))
             {
                 var stream = File.Create("portas.txt");
                 stream.Close();
                 StreamWriter arq = new StreamWriter("portas.txt");
-                arq.WriteLine("1500");
-                arq.WriteLine("1600");
-                arq.WriteLine("1700");
-                arq.WriteLine("127.0.0.1");
+                arq.WriteLine("0");
                 arq.Close();
             }
+
             StreamReader file = new StreamReader("portas.txt");
-            portaRecebe = int.Parse(file.ReadLine());
-            portaEnvia =  int.Parse(file.ReadLine());
-            portaGRPC = int.Parse(file.ReadLine());
-            endereco = file.ReadLine();
-
-            IPEndPoint ip = new IPEndPoint(IPAddress.Parse(endereco), portaRecebe);
-
-            Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-
-            socket.Bind(ip);
-
-            IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
-            EndPoint Remote = (EndPoint)(sender);
+            offint = int.Parse(file.ReadLine()); //Recupera offset
+            Console.WriteLine(offint);
+            file.Close();
 
             RecuperaMapa();
+            SalvaSnapshot();
 
             //Threads
-            Task threadComandos = new Task(ThreadComandos);
             Task threadProcessaComando = new Task(ThreadProcessaComando);
-            Task threadLogaDisco = new Task(ThreadLogaDisco);
-            Task threadGRPC = new Task(ThreadGRPC);
             Task threadSnapshot = new Task(ThreadSnapshot);
 
-            threadComandos.Start();
             threadProcessaComando.Start();
-            threadLogaDisco.Start();
-            threadGRPC.Start();
             threadSnapshot.Start();
 
             while (!desliga)
             {
-                data = new byte[1500];
-                receivedDataLength = socket.ReceiveFrom(data, ref Remote);
-
-                string json = Encoding.ASCII.GetString(data, 0, receivedDataLength);
-                Comando comando = JsonConvert.DeserializeObject<Comando>(json);
-                Requisicao req = new Requisicao(Remote, comando);
-
-                lock (blockComandos)
-                {
-                    filaComandos.Enqueue(req);
-                }
             }
         }
 
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
         static public void RecuperaMapa()
         {
             Comando comando;
@@ -164,6 +111,8 @@ namespace Server
             }
         }
 
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
         static public void ProcessaComando(Comando comando, ref string resposta)
         {
             switch (comando.comand)
@@ -218,6 +167,7 @@ namespace Server
                     }
                     break;
                 case (int)Comandos.DESLIGAR:
+                    resposta = "Servidor Desligado";
                     desliga = true;
                     break;
                 case (int)Comandos.SNAPSHOT:
@@ -238,230 +188,105 @@ namespace Server
             }
         }
 
-        /// <summary>
-        /// Thread que pega os comandos de filaComandos e os escreve em filaProcessa e filaLog.
-        /// </summary>
-        static void ThreadComandos()
-        {
-            Requisicao req;
-            while (true)
-            {
-                lock (blockComandos)
-                {
-                    if (filaComandos.Count > 0)
-                    {
-                        req = filaComandos.Dequeue();
-                        lock (blockProcessa)
-                        {
-                            filaProcessa.Enqueue(req);
-                        }
 
-                        lock (blockLog)
-                        {
-                            filaLog.Enqueue(req);
-                        }
-                    }
-                }
-                
-            }
-        }
-
-        /// <summary>
-        /// Thread que pega os comandos de filaLog e os escreve em disco.
-        /// </summary>
-        static void ThreadLogaDisco()
-        {
-            Requisicao req;
-            while (true)
-            {
-                lock (blockLog)
-                {
-                    using (StreamWriter file = new StreamWriter("json.txt", true))
-                    {
-                        while (filaLog.Count > 0)
-                        {
-                            req = filaLog.Dequeue();
-                            if (req.Comand.comand == (int)Comandos.READ || req.Comand.comand == (int)Comandos.DESLIGAR || req.Comand.comand == (int)Comandos.LISTAR)
-                                continue;
-                            string comando = JsonConvert.SerializeObject(req.Comand);
-                            file.WriteLine(comando);
-                        }
-                        file.Close();
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Thread que pega os comandos de filaProcessa os processa e envia o resultado para o cliente.
-        /// </summary>
+        /// Thread que pega os comandos do topico do kafka os processa e envia o resultado para o cliente.///
         static void ThreadProcessaComando()
         {
-            Requisicao req;
-            IPEndPoint ip = new IPEndPoint(IPAddress.Parse("127.0.0.1"), portaEnvia);
+            //////////////////////////////////////////////
+            string topic = "ComandoTopic4";
+            Uri uri = new Uri("http://localhost:9092");
+            var options = new KafkaOptions(uri);
+            var router = new BrokerRouter(options);
 
-            Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            string topic2 = "RespostaTopic";
+            Uri uri2 = new Uri("http://localhost:9092");
+            var options2 = new KafkaOptions(uri);
+            var router2 = new BrokerRouter(options);
+            var produce = new Producer(router2);
+            //////////////////////////////////////////////
 
-            socket.Bind(ip);
+            //Seta o offset para ler somente mensagens não lidas.
+            OffsetPosition[] offsetPositions = new OffsetPosition[]
+            {
+                new OffsetPosition()
+                {
+                   Offset = offint,
+                    PartitionId = 0
+                }
+            };
+            var consumer = new Consumer(new ConsumerOptions(topic, router),offsetPositions);
 
             while (true)
             {
-                lock (blockProcessa)
+                if (!desliga)
                 {
-                    if (filaProcessa.Count > 0)
+                    //Recebe mensagens(comandos) do tópico
+                    foreach (var message in consumer.Consume())
                     {
-                        req = filaProcessa.Dequeue();
+                        string json = Encoding.ASCII.GetString(message.Value);
+                        Comando comando = JsonConvert.DeserializeObject<Comando>(json);
                         string resposta = "";
-                        byte[] resp;
-                        if(req.Comand.comand != (int)Comandos.LISTAR && req.Comand.comand != (int)Comandos.MONITORAR)
+
+                        if (comando.comand != (int)Comandos.LISTAR)
                         {
-                            ProcessaComando(req.Comand, ref resposta);
-                            if(req.Remote != null)
-                            {
-                                resp = Encoding.UTF8.GetBytes(resposta);
-                                socket.SendTo(resp, resposta.Length, SocketFlags.None, req.Remote);
-                            }
-                            else
-                            {
-                                lock (blockRespostasGRPC)
-                                {
-                                    listaRespostasGRPC.Add(req, resposta);
-                                }
-                            }
+                            ProcessaComando(comando, ref resposta);
+
+                            Console.WriteLine("ThreadProcessa: " + resposta);
+
+                            Message msg = new Message(resposta);
+                            produce.SendMessageAsync(topic2, new List<Message> { msg }); //Envia resposta do procesamento para cliente.
+
+                            offint = offint + 1;
                         }
-                        else if(req.Comand.comand == (int)Comandos.LISTAR)
+                        else if (comando.comand == (int)Comandos.LISTAR)
                         {
-                            if (req.Remote != null)
+                            List<Message> msglist = new List<Message>();
+                            int count = Mapa.Count;
+                            int i = 1;
+                            foreach (KeyValuePair<long, string> entry in Mapa)
                             {
-                                foreach (KeyValuePair<long, string> entry in Mapa)
+                                resposta = entry.Key + " - " + entry.Value;
+                                if (count == i)
                                 {
-                                    resposta = entry.Key + " - " + entry.Value;
-                                    resp = Encoding.UTF8.GetBytes(resposta);
-                                    socket.SendTo(resp, resposta.Length, SocketFlags.None, req.Remote);
+                                    Message msg = new Message(resposta, "2");
+                                    msglist.Add(msg);
                                 }
-                            }
-                            else
-                            {
-                                foreach (KeyValuePair<long, string> entry in Mapa)
-                                {
-                                    resposta = entry.Key + " - " + entry.Value;
-                                    lock (req.block)
-                                    {
-                                        req.respostas.Enqueue(resposta);
-                                    }
-                                }
-                                lock (req.block)
-                                {
-                                    req.HaRespostas = false;
-                                }
-                            }
-                        }
-                        else if(req.Comand.comand == (int)Comandos.MONITORAR)
-                        {
-                            Requisicao existe = null;
-                            if (!Mapa.ContainsKey(req.Comand.Chave))
-                            {
-                                lock (req.block)
-                                {
-                                    req.respostas.Enqueue("Chave inexistente.");
-                                    req.HaRespostas = false;
-                                    continue;
-                                }
-                            }
-                            foreach (Requisicao r in Monitorados)
-                            {
-                                if(r.EstaMonitorando(req.Comand.Chave) && r.context.Peer == req.context.Peer)
-                                {
-                                    existe = r;
-                                }
-                            }
-                            if (existe != null)
-                            {
-                                lock(req.block){
-                                    lock (Monitorados)
-                                    {
-                                        Monitorados.Remove(existe);
-                                    }
-                                    
-                                    lock (existe.block)
-                                    {
-                                        existe.HaRespostas = false;
-                                    }
-                                    req.respostas.Enqueue("Monitoramento da chave " + req.Comand.Chave + " parado com sucesso.");
-                                    req.HaRespostas = false;
-                                }
-                            }
-                            else
-                            {
-                                req.monitora = req.Comand.Chave;
-                                lock (Monitorados)
-                                {
-                                    Monitorados.Add(req);
+                                else {
+                                    Message msg = new Message(resposta, "1");
+                                    msglist.Add(msg);
                                 }
                                 
-                                lock (req.block)
-                                {
-                                    req.respostas.Enqueue("Monitoramento da chave " + req.Comand.Chave + " iniciado com sucesso.");
-                                }
+                                i++;
                             }
+                            produce.SendMessageAsync(topic2, msglist).Wait();
+                            offint = offint + 1;
                         }
 
-                        List<Requisicao> remover = new List<Requisicao>();
-                        lock (Monitorados)
+                        //Atualiza offset
+                        using (StreamWriter file = new StreamWriter("portas.txt", false))
                         {
-                            foreach (Requisicao r in Monitorados)
-                            {
-                                if (req.Comand.Chave == r.monitora)
-                                {
-                                    lock (r.block)
-                                    {
-                                        if (req.Comand.comand == (int)Comandos.UPDATE)
-                                        {
-                                            r.respostas.Enqueue("Valor da chave " + r.Comand.Chave + " atualizado.\nNovo valor: " + req.Comand.Valor);
-                                        }
-                                        else if (req.Comand.comand == (int)Comandos.DELETE)
-                                        {
-                                            remover.Add(r);
-                                            r.respostas.Enqueue("Chave " + r.Comand.Chave + " deletada.\nParando monitoramento.");
-                                            r.HaRespostas = false;
-                                        }
-                                    }
-                                }
-                            }
-                        
+                            file.WriteLine(offint);
+                            file.Close();
                         }
-                        lock (Monitorados)
+
+                        using (StreamWriter file = new StreamWriter("json.txt", true))
                         {
-                            foreach (Requisicao r in remover)
-                            {
-                                Monitorados.Remove(r);
-                            }
+                            if (comando.comand == (int)Comandos.READ || comando.comand == (int)Comandos.DESLIGAR || comando.comand == (int)Comandos.LISTAR)
+                                continue;
+                            string comando2 = JsonConvert.SerializeObject(comando);
+                            file.WriteLine(comando2);
+                            Console.WriteLine("ThreadLog: " + comando2);
+                            file.Close();
                         }
+
                     }
                 }
             }
         }
 
-        /// <summary>
-        /// Thread que recebe requisições GRPC.
-        /// </summary>
-        static void ThreadGRPC()
-        {
-            ProtoImpl impl = new ProtoImpl();
-            impl.blockComandos = blockComandos;
-            impl.filaComandos = filaComandos;
-            impl.blockRespostasGRPC = blockRespostasGRPC;
-            impl.listaRespostasGRPC = listaRespostasGRPC;
 
-            Grpc.Core.Server server = new Grpc.Core.Server
-            {
-                Services = { RPC.BindService(impl) },
-                Ports = { new ServerPort(endereco, portaGRPC, ServerCredentials.Insecure) }
-            };
-
-            server.Start();
-        }
-
+   
+        /////////////////////////////////////////////////////////////////////////////////
         static void ThreadSnapshot()
         {
             int intervalo;
@@ -477,7 +302,10 @@ namespace Server
                 SalvaSnapshot();
             }
         }
+    
 
+
+        ///////////////////////////////////////////////////////////////////////////////
         static void SalvaSnapshot()
         {
             FileStream stream;
