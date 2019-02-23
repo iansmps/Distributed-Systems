@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2003
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientGrpc", "ClientGrpc\ClientGrpc.csproj", "{92DE6EE8-47FD-4A53-9DB8-6F8487A05B7B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RPC", "..\RPC\RPC\RPC.csproj", "{DA2D5B65-22C7-44E7-AF94-2C2EBE0A5FB8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{92DE6EE8-47FD-4A53-9DB8-6F8487A05B7B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92DE6EE8-47FD-4A53-9DB8-6F8487A05B7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92DE6EE8-47FD-4A53-9DB8-6F8487A05B7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92DE6EE8-47FD-4A53-9DB8-6F8487A05B7B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA2D5B65-22C7-44E7-AF94-2C2EBE0A5FB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA2D5B65-22C7-44E7-AF94-2C2EBE0A5FB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA2D5B65-22C7-44E7-AF94-2C2EBE0A5FB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA2D5B65-22C7-44E7-AF94-2C2EBE0A5FB8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {27580F5D-3528-4AFC-8A57-F5F3BECF7B76}
+	EndGlobalSection
+EndGlobal
